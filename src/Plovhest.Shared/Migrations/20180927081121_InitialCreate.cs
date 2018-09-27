@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Plovhest.Shared.Migrations
 {
-    public partial class InitialMigration : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,19 +13,14 @@ namespace Plovhest.Shared.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Executable = table.Column<string>(nullable: true),
-                    Arguments = table.Column<string>(nullable: true),
                     State = table.Column<int>(nullable: false),
-                    Result = table.Column<string>(nullable: true)
+                    Data = table.Column<string>(nullable: true),
+                    Callback = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                 });
-
-            migrationBuilder.Sql("ALTER TABLE Orders " +
-                                 "ADD CONSTRAINT [Result should be formatted as JSON] " +
-                                 "CHECK (ISJSON(Result)=1)");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

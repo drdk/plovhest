@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Hangfire;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Schema;
-using NJsonSchema;
-using NJsonSchema.Generation;
-using NSwag;
-using NSwag.AspNetCore;
-using NSwag.SwaggerGeneration;
-using Plovhest.Shared;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace Plovhest.Web
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Hangfire;
+    using Microsoft.EntityFrameworkCore;
+    using NJsonSchema;
+    using NSwag;
+    using NSwag.AspNetCore;
+    using Shared;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -34,17 +28,28 @@ namespace Plovhest.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           
+            var connectionString = Configuration.GetConnectionString("PlovhestDatabase");
+            services.AddLogging(loggingBuilder =>
+                loggingBuilder.AddConfiguration(Configuration.GetSection("Logging")));
             services.AddHangfire(config =>
+            {
+                config.UseSqlServerStorage(connectionString);
+            });
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddJsonOptions(options =>
                 {
-                    config.UseSqlServerStorage(Configuration.GetConnectionString("PlovhestDatabase"));
-                });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.IsoDateTimeConverter());
+                    options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                });;
             services.AddSwagger();
-            services.AddDbContext<PlovhestDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("PlovhestDatabase")));
-            services.AddLogging(loggingBuilder => loggingBuilder.AddConfiguration(Configuration.GetSection("Logging")));
-            services.AddTransient<ProcessWrapper>();
-            services.AddSingleton((ISettings) new Settings());
+            services.AddDbContext<PlovhestDbContext>(options =>
+            {
+                options.UseSqlServer(connectionString);
+                #if DEBUG
+                options.EnableSensitiveDataLogging();
+                #endif
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,15 +70,15 @@ namespace Plovhest.Web
             app.UseHttpsRedirection();
             app.UseSwaggerUi3WithApiExplorer(settings =>
             {
-                settings.GeneratorSettings.SchemaType = 
+                settings.GeneratorSettings.SchemaType =
                     SchemaType.OpenApi3;
 
-                settings.GeneratorSettings.DefaultPropertyNameHandling = 
+                settings.GeneratorSettings.DefaultPropertyNameHandling =
                     PropertyNameHandling.CamelCase;
 
                 settings.GeneratorSettings.DefaultEnumHandling =
                     EnumHandling.String;
-                
+
                 settings.PostProcess = doc =>
                 {
                     doc.Info.Title = "Plovhest";
@@ -86,7 +91,7 @@ namespace Plovhest.Web
                     doc.Info.Description = $"" +
                                            $"* [Hangfire](/hangfire)";
                 };
-                
+
             });
             app.UseMvc();
         }

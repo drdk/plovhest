@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -21,14 +20,21 @@ namespace Plovhest.Executor
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             IConfigurationRoot configuration = builder.Build();
-            
+            var connectionString = configuration.GetConnectionString("PlovhestDatabase");
+
             configuration.Bind(Settings);
 
             var serviceProvider = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder.AddConfiguration(configuration.GetSection("Logging")) )
                 .AddSingleton(Settings)
                 .AddTransient<ProcessWrapper>()
-                .AddDbContext<PlovhestDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("PlovhestDatabase")))
+                .AddDbContext<PlovhestDbContext>(options =>
+                {
+                    options.UseSqlServer(connectionString);
+                    #if DEBUG
+                    options.EnableSensitiveDataLogging();
+                    #endif
+                })
                 .BuildServiceProvider();
 
             serviceProvider
@@ -40,8 +46,7 @@ namespace Plovhest.Executor
             
             GlobalConfiguration.Configuration.UseActivator(new ServiceProviderJobActivator(serviceProvider));
 
-            GlobalConfiguration.Configuration
-                .UseSqlServerStorage(configuration.GetConnectionString("PlovhestDatabase"));
+            GlobalConfiguration.Configuration.UseSqlServerStorage(connectionString);
 
             using (var server = new BackgroundJobServer(
                 new BackgroundJobServerOptions

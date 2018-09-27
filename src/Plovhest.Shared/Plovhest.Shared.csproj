@@ -6,9 +6,13 @@
 
   <ItemGroup>
     <Compile Remove="Migrations\20180925115921_InitialMigration.cs" />
+    <Compile Remove="Migrations\20180925120627_InitialMigration.cs" />
+    <Compile Remove="Migrations\20180926073958_InitialCreate.cs" />
+    <Compile Remove="Migrations\20180927080842_InitialCreate.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.6.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.3">
       <PrivateAssets>all</PrivateAssets>

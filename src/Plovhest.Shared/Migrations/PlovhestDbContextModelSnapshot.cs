@@ -8,7 +8,7 @@ using Plovhest.Shared;
 namespace Plovhest.Shared.Migrations
 {
     [DbContext(typeof(PlovhestDbContext))]
-    partial class PlovhestDbContexModelSnapshot : ModelSnapshot
+    partial class PlovhestDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -24,11 +24,9 @@ namespace Plovhest.Shared.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Arguments");
+                    b.Property<string>("Callback");
 
-                    b.Property<string>("Executable");
-
-                    b.Property<string>("Result");
+                    b.Property<string>("Data");
 
                     b.Property<int>("State");
 

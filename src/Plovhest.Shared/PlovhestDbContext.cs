@@ -10,31 +10,23 @@ namespace Plovhest.Shared
 {
     public class PlovhestDbContext : DbContext
     {
-        private static JsonSerializerSettings _jsonSerializerSettings =
-            new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = new List<JsonConverter>
-                {
-                    new StringEnumConverter(),
-                    new IsoDateTimeConverter()
-                }
-                
-            };
+       
 
         public PlovhestDbContext(DbContextOptions<PlovhestDbContext> options)
             : base(options)
         { }
 
-        public static void Initialize(IServiceProvider serviceProvider)
+        public static void Initialize(IServiceProvider serviceProvider, bool delete = false)
         {
             using (var serviceScope = serviceProvider.CreateScope())
+            using (var context = serviceScope.ServiceProvider.GetService<PlovhestDbContext>())
             {
-                var context = serviceScope.ServiceProvider.GetService<PlovhestDbContext>();
+                
 
                 // auto migration
+                if (delete)
+                    context.Database.EnsureDeleted();
                 context.Database.Migrate();
-
                 // Seed the database.
                 //Seed(context);
             }
@@ -44,12 +36,17 @@ namespace Plovhest.Shared
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
-          modelBuilder.Entity<Order>()
-                .Property(e => e.Result)
+            modelBuilder.Entity<Order>()
+                .Property(e => e.Callback)
                 .HasConversion(
-                    v => JsonConvert.SerializeObject(v, _jsonSerializerSettings),
-                    v => JsonConvert.DeserializeObject<JObject>(v, _jsonSerializerSettings));
+                    v => v.ToString(),
+                    v => new Uri(v));
+
+            modelBuilder.Entity<Order>()
+                .Property(e => e.Data)
+                .HasConversion(
+                    v => JsonConvert.SerializeObject(v, JsonHelper.JsonSerializerSettings),
+                    v => JsonConvert.DeserializeObject<JObject>(v, JsonHelper.JsonSerializerSettings));
         }
     }
 }
