@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using Hangfire;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Plovhest.Shared;
-using Task = Plovhest.Shared.Task;
-
-namespace Plovhest.Web.Controllers
+﻿namespace Plovhest.Web.Controllers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Hangfire;
+    using Microsoft.AspNetCore.Mvc;
+    using Shared;
+    using Task = Shared.Task;
+
+    /// <summary>
+    /// Plovhest Order Controller
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
@@ -54,10 +53,11 @@ namespace Plovhest.Web.Controllers
                         $"-y -i \"{request.Source}\" -vf yadif=1:-1:0 -c:v libvpx-vp9 -pass 2 -b:v 6000K -keyint_min 60 -g 60 -threads 8 -speed 2 -tile-columns 4 -c:a libopus -b:a 128k -f webm \"{request.Destination}\""
                 },
             };
-            tasks[0].HangfireId = BackgroundJob.Enqueue<ProcessWrapper>(x => x.Run(order.Id,tasks[0].Executable, tasks[0].Arguments, JobCancellationToken.Null));
+            tasks[0].HangfireId = BackgroundJob.Schedule<ProcessWrapper>(x => x.Run(order.Id,tasks[0].Executable, tasks[0].Arguments, JobCancellationToken.Null), TimeSpan.FromSeconds(2));
             tasks[1].HangfireId = BackgroundJob.ContinueWith<ProcessWrapper>(tasks[0].HangfireId, x => x.Run(order.Id,tasks[1].Executable, tasks[1].Arguments, JobCancellationToken.Null));
             var callbackHangfireId = BackgroundJob.ContinueWith<CallbackService>(tasks[1].HangfireId, x => x.Run(order.Id, request.Callback));
             order.Tasks = tasks;
+            _context.Orders.Update(order); 
             _context.SaveChanges();
 
           return new OrderIdentifier

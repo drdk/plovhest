@@ -4,6 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <UserSecretsId>Plovhest</UserSecretsId>
+    <Company>DR (Danish Broadcasting Corporation)</Company>
+    <Authors>DR TU</Authors>
+    <Copyright>DR (Danish Broadcasting Corporation)</Copyright>
+    <Description>Hangfire backed ffmpeg farm</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Hangfire;
-using Microsoft.Extensions.Logging;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System;
+    using System.Diagnostics;
+    using System.Linq;
+    using Hangfire;
+    using Microsoft.Extensions.Logging;
+
     public class ProcessWrapper : IDisposable
     {
         private readonly PlovhestDbContext _context;
@@ -18,13 +17,13 @@ namespace Plovhest.Shared
             _context = context;
             _settings = settings;
             _logger = loggerFactory.CreateLogger<ProcessWrapper>();
-
         }
+
         public void Run(int orderId, string executable, string arguments, IJobCancellationToken cancellationToken)
         {
             var order = _context.Orders.First(o => o.Id == orderId);
 
-            if (! new[] {State.Queued, State.Running}.Contains(order.State))
+            if (! new[] { State.Queued, State.Running }.Contains(order.State))
             {
                 _logger.LogWarning($"Invalid order state : {order.State}");
                 return;
@@ -32,8 +31,7 @@ namespace Plovhest.Shared
 
             order.State = State.Running;
             _context.SaveChanges();
-
-
+            
             if (executable == "{FFmpegPath}")
                 executable = _settings.FFmpegPath;
             else
@@ -62,11 +60,18 @@ namespace Plovhest.Shared
                 };
 
                 process.OutputDataReceived += DataReceived;
-                process.ErrorDataReceived += DataReceived;
+                process.ErrorDataReceived += ErrorReceived;
                 process.Start();
+                cancellationToken.ShutdownToken.Register(process.Kill);
                 process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
                 process.WaitForExit();
+                if (cancellationToken.ShutdownToken.IsCancellationRequested)
+                {
+                    _logger.LogInformation($"Order {order.Id} canceled via hangfire.");
+                    order.State = State.Canceled;
+                    _context.SaveChanges();
+                }
                 _logger.LogInformation($"Order {order.Id} {executable} {arguments} done");
             }
             catch (Exception e)
@@ -78,12 +83,15 @@ namespace Plovhest.Shared
 
         }
 
-        private static void DataReceived(object sender, DataReceivedEventArgs e)
+        private void DataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (e.Data == null)
-                return;
-
-            Console.WriteLine(e.Data);
+            if (e.Data == null) return;
+            _logger.LogDebug(e.Data);
+        }
+        private void ErrorReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data == null) return;
+            _logger.LogWarning(e.Data);
         }
 
         public void Dispose()

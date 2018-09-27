@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System.Collections.Generic;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
+
     internal static class JsonHelper
     {
         internal static JsonSerializerSettings JsonSerializerSettings =>
@@ -17,7 +15,6 @@ namespace Plovhest.Shared
                     new StringEnumConverter(),
                     new IsoDateTimeConverter()
                 }
-                
             };
     }
 }

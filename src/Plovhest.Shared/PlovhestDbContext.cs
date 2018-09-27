@@ -1,34 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
     public class PlovhestDbContext : DbContext
     {
-       
-
-        public PlovhestDbContext(DbContextOptions<PlovhestDbContext> options)
-            : base(options)
-        { }
+        public PlovhestDbContext(DbContextOptions<PlovhestDbContext> options) : base(options) { }
 
         public static void Initialize(IServiceProvider serviceProvider, bool delete = false)
         {
             using (var serviceScope = serviceProvider.CreateScope())
             using (var context = serviceScope.ServiceProvider.GetService<PlovhestDbContext>())
             {
-                
+                if (delete) context.Database.EnsureDeleted();
 
                 // auto migration
-                if (delete)
-                    context.Database.EnsureDeleted();
                 context.Database.Migrate();
                 // Seed the database.
-                //Seed(context);
+                // Seed(context);
             }
         }
 

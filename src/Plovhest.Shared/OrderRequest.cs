@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System;
+
     public struct OrderRequest
     {
         public string Source { get; set; }

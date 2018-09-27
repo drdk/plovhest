@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
     public class Order
     {
         public int Id { get; set; }
@@ -14,10 +13,11 @@ namespace Plovhest.Shared
         public JObject Data { get; set; } = new JObject();
         public Uri Callback { get; set; }
 
+        [JsonIgnore]
         [NotMapped]
         public IEnumerable<Task> Tasks
         {
-            get => Data["Tasks"]?.ToObject< IEnumerable< Task>>();
+            get => Data["Tasks"]?.ToObject<IEnumerable<Task>>();
             set => Data["Tasks"] = JArray.FromObject(value);
         }
     }

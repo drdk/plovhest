@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc.Formatters;
-
-namespace Plovhest.Web
+﻿namespace Plovhest.Web
 {
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -31,17 +28,19 @@ namespace Plovhest.Web
             var connectionString = Configuration.GetConnectionString("PlovhestDatabase");
             services.AddLogging(loggingBuilder =>
                 loggingBuilder.AddConfiguration(Configuration.GetSection("Logging")));
+            
             services.AddHangfire(config =>
             {
                 config.UseSqlServerStorage(connectionString);
             });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.IsoDateTimeConverter());
                     options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                });;
+                });
             services.AddSwagger();
             services.AddDbContext<PlovhestDbContext>(options =>
             {

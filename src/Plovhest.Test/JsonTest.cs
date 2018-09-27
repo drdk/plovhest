@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Plovhest.Shared;
-using Xunit;
-
-namespace Plovhest.Test
+﻿namespace Plovhest.Test
 {
+    using System;
+    using Shared;
+    using Xunit;
+
     public class JsonTest
     {
         [Fact]
-        public void Test1()
+        public void OrderDataTest()
         {
             var order = new Order
             {
@@ -22,6 +20,10 @@ namespace Plovhest.Test
                     Executable = "dir.exe"
                 } }
             };
+            Assert.NotEqual("{}",order.Data.ToString());
+
+            order = new Order();
+            Assert.Equal("{}",order.Data.ToString());
         }
     }
 }

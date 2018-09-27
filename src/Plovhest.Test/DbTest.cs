@@ -1,12 +1,13 @@
-using System;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Plovhest.Shared;
-using Xunit;
-
 namespace Plovhest.Test
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.DependencyInjection;
+    using Shared;
+    using Xunit;
+
     public class DbTest : IDisposable
     {
         private readonly ServiceProvider _serviceProvider;
@@ -30,7 +31,7 @@ namespace Plovhest.Test
         }
 
         [Fact]
-        public void Test1()
+        public void EFModelTest()
         {
             using (var serviceScope = _serviceProvider.CreateScope())
             using (var context = serviceScope.ServiceProvider.GetService<PlovhestDbContext>())
@@ -47,12 +48,22 @@ namespace Plovhest.Test
                     } }
                 };
 
-                context.Orders.Add(order);
+                context.Orders.Attach(order);
                 Assert.Equal(1, context.SaveChanges());
 
                 var dbOrder = context.Orders.FirstOrDefault();
                 Assert.NotNull(dbOrder);
+                Assert.Single(dbOrder.Tasks);
+                order.Tasks = new List<Task> { new Task { Arguments = "dsfdsf", Executable = "explorer.exe" }};
+                context.SaveChanges();
 
+                //dbOrder = context.Orders.First();
+                var tasks = order.Tasks.ToList();
+                tasks[0].HangfireId = Guid.NewGuid().ToString();
+                order.Tasks = tasks;
+                context.SaveChanges();
+                dbOrder = context.Orders.First();
+                Assert.Single(dbOrder.Tasks);
             }
 
         }

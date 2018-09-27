@@ -1,33 +1,34 @@
-﻿using System;
-using System.IO;
-using Hangfire;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Plovhest.Shared;
-
-namespace Plovhest.Executor
+﻿namespace Plovhest.Executor
 {
+    using System;
+    using System.IO;
+    using Hangfire;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Shared;
+
     class Program
     {
         private static readonly ISettings Settings = new Settings();
+
         static void Main(string[] args)
         {
-
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
-            IConfigurationRoot configuration = builder.Build();
+            var configuration = builder.Build();
             var connectionString = configuration.GetConnectionString("PlovhestDatabase");
 
             configuration.Bind(Settings);
 
             var serviceProvider = new ServiceCollection()
-                .AddLogging(loggingBuilder => loggingBuilder.AddConfiguration(configuration.GetSection("Logging")) )
+                .AddLogging(loggingBuilder => loggingBuilder.AddConfiguration(configuration.GetSection("Logging")))
                 .AddSingleton(Settings)
                 .AddTransient<ProcessWrapper>()
+                .AddTransient<CallbackService>()
                 .AddDbContext<PlovhestDbContext>(options =>
                 {
                     options.UseSqlServer(connectionString);
@@ -37,22 +38,15 @@ namespace Plovhest.Executor
                 })
                 .BuildServiceProvider();
 
-            serviceProvider
-                .GetService<ILoggerFactory>()
-                .AddConsole(LogLevel.Debug);
+            serviceProvider.GetService<ILoggerFactory>().AddConsole(LogLevel.Debug);
 
-            var logger = serviceProvider.GetService<ILoggerFactory>()
-                .CreateLogger<Program>();
+            var logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<Program>();
             
             GlobalConfiguration.Configuration.UseActivator(new ServiceProviderJobActivator(serviceProvider));
 
             GlobalConfiguration.Configuration.UseSqlServerStorage(connectionString);
 
-            using (var server = new BackgroundJobServer(
-                new BackgroundJobServerOptions
-                {
-                    WorkerCount = 1
-                }))
+            using (var server = new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 1 }))
             {
                 logger.LogDebug("Hangfire Server started.");
                 Console.WriteLine("Press any key to exit...");

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Plovhest.Shared
+﻿namespace Plovhest.Shared
 {
+    using System.Collections.Generic;
+
     public class OrderIdentifier
     {
         public int Id { get; set; }
