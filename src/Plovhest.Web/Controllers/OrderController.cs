@@ -45,13 +45,13 @@ namespace Plovhest.Web.Controllers
                 {
                     Executable = "{FFmpegPath}",
                     Arguments =
-                        $"-y -i \"{request.Source}\" -vf yadif=1:-1:0 -vf scale=640:-1 -c:v libvpx-vp9 -pass 1 -b:v 2000K -keyint_min 60 -g 60 -threads 8 -speed 4 -tile-columns 4 -f webm NUL"
+                        $"-y -i \"{request.Source}\" -vf yadif=1:-1:0 -c:v libvpx-vp9 -pass 1 -b:v 6000K -keyint_min 60 -g 60 -threads 8 -speed 4 -tile-columns 4 -f webm NUL"
                 },
                 new Task
                 {
                     Executable = "{FFmpegPath}",
                     Arguments =
-                        $"-y -i \"{request.Source}\" -vf yadif=1:-1:0 -vf scale=640:-1 -c:v libvpx-vp9 -pass 2 -b:v 2000K -keyint_min 60 -g 60 -threads 8 -speed 2 -tile-columns 4 -c:a libopus -b:a 128k -f webm \"{request.Destination}\""
+                        $"-y -i \"{request.Source}\" -vf yadif=1:-1:0 -c:v libvpx-vp9 -pass 2 -b:v 6000K -keyint_min 60 -g 60 -threads 8 -speed 2 -tile-columns 4 -c:a libopus -b:a 128k -f webm \"{request.Destination}\""
                 },
             };
             tasks[0].HangfireId = BackgroundJob.Enqueue<ProcessWrapper>(x => x.Run(order.Id,tasks[0].Executable, tasks[0].Arguments, JobCancellationToken.Null));
